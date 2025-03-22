@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     avatar: String,
     roleId: String,
     status: String,
+    position: Number,
     deleted: {
         type: Boolean,
         default: false

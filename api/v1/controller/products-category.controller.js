@@ -2,68 +2,133 @@ const ProductCategory = require("../../../model/product.category.modle");
 const searchHelper = require("../../../helper/search.helper")
 const paginationHelper = require("../../../helper/pagination.helper")
 const createTreeHelper = require("../../../helper/category")
-module.exports.productsCategory = async (req, res)=>{
+// module.exports.productsCategory = async (req, res)=>{
     
-    const find = {
-        deleted: false,
-        status: "active"
-    }
+//     const find = {
+//         deleted: false,
+//         status: "active"
+//     }
 
-    // tìm kiếm
-    const search = searchHelper(req.query);
-    if(search.regex){
-        find.title = search.regex
-    }
+//     // tìm kiếm
+//     const search = searchHelper(req.query);
+//     if(search.regex){
+//         find.title = search.regex
+//     }
 
-    // lọc theo trạng thái 
-    if(req.query.status){
-        find.status = req.query.status;
-    }
+//     // lọc theo trạng thái 
+//     if(req.query.status){
+//         find.status = req.query.status;
+//     }
 
-    // tính năng lọc theo tiêu chí
-    const sort = {};
-    if(req.query.sortKey&&req.query.sortValue){
-        sort[req.query.sortKey] = req.query.sortValue;
-    }else {
-        sort.position = "desc"
-    }
+//     // tính năng lọc theo tiêu chí
+//     const sort = {};
+//     if(req.query.sortKey&&req.query.sortValue){
+//         sort[req.query.sortKey] = req.query.sortValue;
+//     }else {
+//         sort.position = "desc"
+//     }
 
-    // tính năng phân trang 
-    let initPagination = {
-        currentPage: 1,
-        limitItem: 8
-    }
+//     // tính năng phân trang 
+//     let initPagination = {
+//         currentPage: 1,
+//         limitItem: 8
+//     }
 
-    const countProductCategory = await ProductCategory.countDocuments(find);
-    const ojectPanigation = paginationHelper(
-        initPagination,
-        req.query,
-        countProductCategory
-    )
+//     const countProductCategory = await ProductCategory.countDocuments(find);
+//     const ojectPanigation = paginationHelper(
+//         initPagination,
+//         req.query,
+//         countProductCategory
+//     )
 
-    const producCategoryt = await ProductCategory.find(find).sort(sort).limit(ojectPanigation.limitItem).skip(ojectPanigation.skip)
+//     const producCategoryt = await ProductCategory.find(find).sort(sort).limit(ojectPanigation.limitItem).skip(ojectPanigation.skip)
 
-    const newrecord = createTreeHelper.tree(producCategoryt)
+//     const newrecord = createTreeHelper.tree(producCategoryt)
 
-    const childrenCategory = [];
-    const parentCategory = [];
+//     const childrenCategory = [];
+//     const parentCategory = [];
 
-    producCategoryt.forEach(category=>{
-        if(!category.parent_id){
-            parentCategory.push(category)
-        }else {
-            childrenCategory.push(category)
+//     producCategoryt.forEach(category=>{
+//         if(!category.parent_id){
+//             parentCategory.push(category)
+//         }else {
+//             childrenCategory.push(category)
+//         }
+//     })
+
+//     res.json({
+//         record: newrecord,
+//         parentCategory: parentCategory,
+//         childrenCategory: childrenCategory,
+//         code: 200,
+//         message: "success"
+//     })
+// }
+module.exports.productsCategory = async (req, res) => {
+    try {
+        const find = {
+            deleted: false,
+            status: "active"
+        };
+
+        // Tìm kiếm theo title
+        const search = searchHelper(req.query);
+        if (search.regex) {
+            find.title = search.regex;
         }
-    })
 
-    res.json({
-        record: newrecord,
-        parentCategory: parentCategory,
-        childrenCategory: childrenCategory,
-        code: 200,
-        message: "success"
-    })
-}
+        // Lọc theo status nếu có
+        if (req.query.status) {
+            find.status = req.query.status;
+        }
+
+        // Sắp xếp
+        const sort = {};
+        if (req.query.sortKey && req.query.sortValue) {
+            sort[req.query.sortKey] = req.query.sortValue;
+        } else {
+            sort.position = "desc";
+        }
+
+        // Phân trang
+        let initPagination = {
+            currentPage: 1,
+            limitItem: 8
+        };
+
+        const countProductCategory = await ProductCategory.countDocuments(find);
+        const pagination = paginationHelper(
+            initPagination,
+            req.query,
+            countProductCategory
+        );
+
+        // Truy vấn danh mục theo điều kiện tìm kiếm, sắp xếp, phân trang
+        const productCategories = await ProductCategory.find(find)
+            .sort(sort)
+            .limit(pagination.limitItem)
+            .skip(pagination.skip);
+
+        // Tạo cây danh mục từ danh sách truy vấn
+        const categoryTree = createTreeHelper.tree(productCategories);
+
+        // Trả về dữ liệu theo format chuẩn FE dễ dùng
+        return res.json({
+            status: true,
+            message: "Lấy danh sách danh mục thành công",
+            data: categoryTree
+        });
+        
+    } catch (error) {
+        console.error("Lỗi productsCategory:", error);
+        return res.status(500).json({
+            status: false,
+            message: "Đã có lỗi xảy ra",
+            error: error.message
+        });
+    }
+};
+
 
 module.exports.create = async (req, res)=>{
 

@@ -2,19 +2,18 @@ const User = require("../../../model/user.modle");
 const randomString = require("../../../helper/randomString")
 const md5 = require('md5');
 const sendMail = require("../../../helper/sendMail.helper")
-const ForgotPassword = require("../../../model/sendOtp.router")
+const ForgotPassword = require("../../../model/sendOtp.model")
 module.exports.register = async (req, res)=>{
     
     try {
         const exisEmail = await User.findOne({
             email: req.body.email,
-            phoneNumber: req.body.phoneNumber,
             deleted: false
         })
         if(exisEmail){
             res.json({
                 code: 404,
-                message: "Email hoac số điện thoại đã bị trùng"
+                message: "Email đã bị trùng"
             })
         }else {
             const user = new User({
@@ -34,14 +33,12 @@ module.exports.register = async (req, res)=>{
             res.json({
                 code: 200,
                 message: " Đăng Kí tài khoản thành công thành công",
-                token: token
             })
         }
     } catch (error) {
         res.json({
             code: 200,
-            message: " Đăng Kí tài khoản không thành công thành công",
-            token: token
+            message: " Đăng Kí tài khoản không thành công thành công"
         })
     }
     
@@ -49,7 +46,6 @@ module.exports.register = async (req, res)=>{
 
 module.exports.login = async (req, res)=>{
    try {
-    console.log(req.body);
     const{fullName, email, passWord, phoneNumber} = req.body;
     const user = await User.findOne({
         fullName: fullName,
@@ -238,4 +234,12 @@ module.exports.list = async(req, res)=>{
             error: error
         })
     }
+}
+
+module.exports.logout = (req, res)=>{
+    res.clearCookie("token")
+    res.json({
+        code: 200,
+        message: 'Dang xuat thanh cong'
+    })
 }

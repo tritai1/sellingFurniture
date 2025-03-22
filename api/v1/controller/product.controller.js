@@ -13,7 +13,7 @@ module.exports.product = async (req, res)=>{
     // chuc nang phan trang         
         let initPagination = {
             currentPage: 1,
-            limitItem: 2
+            limitItem: 10
         }
         const countProduct = await Product.countDocuments(find);
         const ojectPanigation = paginationHelper(
@@ -45,10 +45,17 @@ module.exports.product = async (req, res)=>{
     const record = await ProductCategory.find({
         deleted: false
     })
+
+    const newProducts = product.map(item => {  // su dung map de tinh toan gia thep phan tram giam gia discountPercentage: phan tram giam gia
+        item.priceNew = (item.price*(100 - item.discountPercentage)/100).toFixed(0); // ham tinh gia theo phan tram giam gia lay ra gia moi 
+        item.price = item.priceNew;        
+        return item;                                                                            // ham toFixed giup loai bo cac dau sau dau phay      
+    })
+    
     const newProduct = treeHelper.tree(record)
     res.json([
         {
-            data: product,
+            data: newProducts,
            
         },
         {

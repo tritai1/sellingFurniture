@@ -3,8 +3,9 @@ const router = express.Router()
 const validate = require("../../../validate/register.validate");
 const controller = require("../controller/user.controller")
 
-router.post("/register",validate.validateEmail, validate.checkValidation, controller.register);
+router.post("/register",validate.validateAccount, validate.checkValidation, controller.register);
 router.post("/login", controller.login);
+router.get("/logout", controller.logout);
 router.post("/forgot-password", controller.forgotPassword);
 router.post("/password/send-otp", controller.sendOtp);
 router.post("/password/reset", controller.resetPassword);
